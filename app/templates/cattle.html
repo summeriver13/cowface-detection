@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>牛只管理 - 牛脸识别系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .cattle-list {
+            margin-top: 20px;
+        }
+        .cattle-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .add-form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{{ url_for('index.dashboard') }}">首页</a>
+            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
+            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
+            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
+            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
+            <a href="{{ url_for('auth.logout') }}">退出登录</a>
+        </div>
+        <h1>牛只管理</h1>
+        
+        <div class="add-form">
+            <h2>添加新牛</h2>
+            <form method="POST">
+                <input type="text" name="name" placeholder="输入牛只名称" required>
+                <button type="submit">添加</button>
+            </form>
+        </div>
+        
+        <div class="cattle-list">
+            <h2>牛只列表</h2>
+            {% for cow in cattle %}
+            <div class="cattle-item">
+                <h3>{{ cow.name }}</h3>
+                <h4>最近识别记录:</h4>
+                <ul>
+                    {% for record in cow.records[-5:] %}
+                    <li>
+                        时间: {{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        结果: {{ record.result }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html> 

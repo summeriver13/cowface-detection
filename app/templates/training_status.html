@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>训练状态 - 牛脸识别系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .nav {
+            background-color: #f8f8f8;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .nav a:hover {
+            background-color: #e8e8e8;
+        }
+        /* 复用现有样式并添加表格样式 */
+        .training-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .training-table th, .training-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .training-table th {
+            background-color: #f5f5f5;
+        }
+        .status-training {
+            color: blue;
+        }
+        .status-completed {
+            color: green;
+        }
+        .status-failed {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{{ url_for('index.dashboard') }}">首页</a>
+            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
+            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
+            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
+            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
+            <a href="{{ url_for('auth.logout') }}">退出登录</a>
+        </div>
+        
+        <h1>训练状态</h1>
+        
+        <table class="training-table">
+            <thead>
+                <tr>
+                    <th>模型类型</th>
+                    <th>开始时间</th>
+                    <th>状态</th>
+                    <th>mAP@0.5</th>
+                    <th>mAP@0.5:0.95</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for training in trainings %}
+                <tr>
+                    <td>YOLOv8{{ training.model_type }}</td>
+                    <td>{{ training.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td class="status-{{ training.status }}">{{ training.status }}</td>
+                    <td>{{ "%.3f"|format(training.map50) if training.map50 else "-" }}</td>
+                    <td>{{ "%.3f"|format(training.map50_95) if training.map50_95 else "-" }}</td>
+                    <td>{{ "%.3f"|format(training.precision) if training.precision else "-" }}</td>
+                    <td>{{ "%.3f"|format(training.recall) if training.recall else "-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+</body>
+</html> 

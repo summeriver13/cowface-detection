@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>模型训练 - 牛脸识别系统</title>
+    <style>
+        /* 复用现有样式 */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{{ url_for('index.dashboard') }}">首页</a>
+            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
+            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
+            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
+            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
+            <a href="{{ url_for('auth.logout') }}">退出登录</a>
+        </div>
+
+        <h1>模型训练</h1>
+        
+        <div class="training-form">
+            <form method="POST">
+                <div class="form-group">
+                    <label>训练轮数 (epochs):</label>
+                    <input type="number" name="epochs" value="50" min="1" max="1000">
+                </div>
+                
+                <div class="form-group">
+                    <label>批次大小 (batch size):</label>
+                    <input type="number" name="batch_size" value="16" min="1" max="128">
+                </div>
+                
+                <div class="form-group">
+                    <label>学习率 (learning rate):</label>
+                    <input type="number" name="learning_rate" value="0.001" step="0.0001" min="0.0001" max="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label>模型类型:</label>
+                    <select name="model_type">
+                        <option value="n">YOLOv8n (小)</option>
+                        <option value="s">YOLOv8s (中)</option>
+                        <option value="m">YOLOv8m (大)</option>
+                        <option value="l">YOLOv8l (特大)</option>
+                    </select>
+                </div>
+                
+                <button type="submit">开始训练</button>
+            </form>
+        </div>
+        
+        <div class="training-notes">
+            <h3>训练说明:</h3>
+            <ul>
+                <li>训练过程可能需要较长时间，请耐心等待</li>
+                <li>训练结果会自动保存</li>
+                <li>可以在训练状态页面查看进度</li>
+                <li>建议使用GPU进行训练</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

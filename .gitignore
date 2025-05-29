@@ -1,0 +1,8 @@
+.venv
+app/__pycache__
+app/models/__pycache__
+app/decorators/__pycache__
+app/routes/__pycache__
+app/controllers/__pycache__
+runs
+ml_models

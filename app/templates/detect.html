@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>牛脸检测 - 牛脸识别系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .upload-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+        }
+        #preview {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .nav {
+            background-color: #f8f8f8;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #333;
+        }
+        .model-select {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .model-select label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        .model-select select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .model-select .note {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .model-select option:disabled {
+            color: #999;
+            font-style: italic;
+        }
+        .model-select optgroup {
+            font-weight: bold;
+        }
+        .model-info {
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            color: #666;
+        }
+        .result-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+        }
+        .detection-list {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+        .detection-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .upload-section {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .upload-section input[type="file"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .upload-section button {
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{{ url_for('index.dashboard') }}">首页</a>
+            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
+            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
+            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
+            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
+            <a href="{{ url_for('auth.logout') }}">退出登录</a>
+        </div>
+
+        <h1>牛脸检测</h1>
+        
+        <div class="upload-container">
+            <div class="model-info">
+                <p>使用检测模型: YOLOv8 牛脸检测模型</p>
+                <p>使用分类模型: EfficientNet 牛只识别模型</p>
+            </div>
+            
+            <div class="model-select">
+                <label for="model_select">可用的YOLOv8模型:</label>
+                <select id="model_select">
+                    <optgroup label="预训练模型">
+                        {% for type, info in models.pretrained.items() %}
+                        <option value="{{ info.path }}">
+                            {{ info.name }}
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+                    {% if models.trained %}
+                    <optgroup label="已训练模型">
+                        {% for model in models.trained %}
+                        <option value="{{ model.path }}">{{ model.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endif %}
+                </select>
+                <p class="note">注：选择优化模型</p>
+            </div>
+            
+            <div class="upload-section">
+                <input type="file" id="imageInput" accept="image/*">
+                <button onclick="detectFaces()">开始检测</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <p>正在处理中...</p>
+        </div>
+        
+        <div id="result">
+            <img id="preview">
+            <div class="result-info" id="resultInfo" style="display: none;">
+                <h3>检测结果:</h3>
+                <div id="detectionList" class="detection-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function detectFaces() {
+            const input = document.getElementById('imageInput');
+            const loading = document.getElementById('loading');
+            const preview = document.getElementById('preview');
+            const resultInfo = document.getElementById('resultInfo');
+            const detectionList = document.getElementById('detectionList');
+            
+            if (!input.files || !input.files[0]) {
+                alert('请先选择图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', input.files[0]);
+            
+            loading.style.display = 'block';
+            preview.style.display = 'none';
+            resultInfo.style.display = 'none';
+            
+            fetch('/detect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                if (data.success) {
+                    preview.style.display = 'block';
+                    preview.src = 'data:image/jpeg;base64,' + data.image;
+                    
+                    // 显示检测结果
+                    resultInfo.style.display = 'block';
+                    detectionList.innerHTML = '';
+                    data.detections.forEach(det => {
+                        const item = document.createElement('div');
+                        item.className = 'detection-item';
+                        item.innerHTML = `
+                            类别: ${det.class}<br>
+                            检测置信度: ${det.detection_conf}<br>
+                            识别置信度: ${det.class_conf}
+                        `;
+                        detectionList.appendChild(item);
+                    });
+                } else {
+                    alert(data.error || '处理出错');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                console.error('Error:', error);
+                alert('网络请求失败');
+            });
+        }
+        
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('preview');
+            const file = e.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html> 
