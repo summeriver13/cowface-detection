@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
+from flask import Blueprint, jsonify, render_template, request, session
 from ..config import YOLO_MODEL_PATH, CLASSIFIER_MODEL_PATH
 from ..controllers import require_login
 from ..controllers import get_available_models, load_yolo_model
@@ -38,7 +38,6 @@ def detect():
         # 检测和识别
         from ..config import TRAIN_DIR
         
-        load_yolo_model()
         recognizer = CowFaceRecognizer(train_dir=TRAIN_DIR)
         detections = recognizer.detect_and_recognize(img)
         

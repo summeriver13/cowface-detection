@@ -1,201 +1,136 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  .upload-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .model-info p {
-    margin: 4px 0;
-    font-weight: 600;
-    color: #34495e;
-  }
-  .model-select label {
-    font-weight: 600;
-    color: #2c3e50;
-  }
-  select#model_select {
-    width: 100%;
-    padding: 8px 12px;
-    margin-top: 6px;
-    border: 1.5px solid #3498db;
-    border-radius: 6px;
-    background: #fefefe;
-    font-size: 14px;
-    color: #2c3e50;
-    transition: border-color 0.3s;
-  }
-  select#model_select:hover,
-  select#model_select:focus {
-    border-color: #2980b9;
-    outline: none;
-  }
-  .note {
-    font-size: 12px;
-    color: #7f8c8d;
-    margin-top: 4px;
-  }
-  .upload-section {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  input[type="file"] {
-    flex: 1;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #bdc3c7;
-    font-size: 14px;
-  }
-  button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  button:hover {
-    background-color: #2980b9;
-  }
-  .loading {
-    text-align: center;
-    margin-top: 20px;
-    font-weight: 600;
-    color: #e67e22;
-  }
-  #preview {
-    display: block;
-    margin: 20px auto;
-    max-width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.15);
-  }
-  .result-info {
-    margin-top: 20px;
-    background: #ecf0f1;
-    border-radius: 8px;
-    padding: 15px;
-  }
-  .result-info h3 {
-    margin-bottom: 12px;
-    color: #2c3e50;
-  }
-  .detection-list .detection-item {
-    margin-bottom: 6px;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.05);
-    font-weight: 600;
-    color: #34495e;
-  }
-</style>
 
 <div class="container">
-    <h1>牛脸检测</h1>
-    
-    <div class="upload-container">
-        <div class="model-info">
-            <p>使用检测模型: YOLOv8 牛脸检测模型</p>
-            <p>使用分类模型: EfficientNet 牛只识别模型</p>
-        </div>
-        
-        <div class="model-select">
-            <label for="model_select">可用的YOLOv8模型:</label>
-            <select id="model_select">
-                <optgroup label="预训练模型">
-                    {% for type, info in models.pretrained.items() %}
-                    <option value="{{ info.path }}">{{ info.name }}</option>
-                    {% endfor %}
-                </optgroup>
-                {% if models.trained %}
-                <optgroup label="已训练模型">
-                    {% for model in models.trained %}
-                    <option value="{{ model.path }}">{{ model.name }}</option>
-                    {% endfor %}
-                </optgroup>
-                {% endif %}
-            </select>
-            <p class="note">注：选择优化模型</p>
-        </div>
-        
-        <div class="upload-section">
-            <input type="file" id="imageInput" accept="image/*">
-            <button onclick="detectFaces()">开始检测</button>
-        </div>
+  <h1>牛脸检测</h1>
+  
+  <div class="upload-container">
+    <div class="model-info">
+      <p>使用检测模型: YOLOv8 牛脸检测模型</p>
+      <p>使用分类模型: EfficientNet 牛只识别模型</p>
     </div>
     
-    <div class="loading" id="loading" style="display:none;">
-        正在处理中...
+    <div class="model-select">
+      <label for="model_select">可用的YOLOv8模型:</label>
+      <select id="model_select">
+        <optgroup label="预训练模型">
+          {% for type, info in models.pretrained.items() %}
+          <option value="{{ info.path }}">{{ info.name }}</option>
+          {% endfor %}
+        </optgroup>
+        {% if models.trained %}
+        <optgroup label="已训练模型">
+          {% for model in models.trained %}
+          <option value="{{ model.path }}">{{ model.name }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endif %}
+      </select>
+      <p class="note">注：选择优化模型</p>
     </div>
     
-    <img id="preview" alt="检测预览图" style="display:none;">
-    
-    <div class="result-info" id="resultInfo" style="display:none;">
-        <h3>检测结果</h3>
-        <div class="detection-list" id="detectionList"></div>
+    <div class="upload-section">
+      <input type="file" id="imageInput" accept="image/*">
+      <button id="detect-btn">开始检测</button>
     </div>
+  </div>
+  
+  <div class="loading" id="loading" style="display:none;">
+    正在处理中...
+  </div>
+  
+  <img id="preview" alt="检测预览图" style="display:none;">
+  
+  <div class="result-info" id="resultInfo" style="display:none;">
+    <h3>检测结果</h3>
+    <div class="detection-list" id="detectionList"></div>
+  </div>
 </div>
 
 <script>
-    function detectFaces() {
-        const fileInput = document.getElementById('imageInput');
-        const loading = document.getElementById('loading');
-        const preview = document.getElementById('preview');
-        const resultInfo = document.getElementById('resultInfo');
-        const detectionList = document.getElementById('detectionList');
-        const modelSelect = document.getElementById('model_select');
+const preview = document.getElementById('preview');
+const detectionList = document.getElementById('detectionList');
+const resultInfo = document.getElementById('resultInfo');
+const loading = document.getElementById('loading');
 
-        if (!fileInput.files.length) {
-            alert('请选择一张图片。');
-            return;
-        }
+document.getElementById('detect-btn').addEventListener('click', () => {
+  const fileInput = document.getElementById('imageInput');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('请先选择图片');
+    return;
+  }
 
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('model_path', modelSelect.value);
+  const formData = new FormData();
+  formData.append('image', file);
 
-        loading.style.display = 'block';
-        preview.style.display = 'none';
-        resultInfo.style.display = 'none';
+  loading.style.display = 'block';
+  preview.style.display = 'none';
+  resultInfo.style.display = 'none';
+
+  fetch('/detect', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    loading.style.display = 'none';
+    
+    if (data.success) {
+      preview.src = `data:image/jpeg;base64,${data.image}`;
+      preview.style.display = 'block';
+
+      if (data.detections && data.detections.length) {
         detectionList.innerHTML = '';
-
-        fetch('/detect', {
-            method: 'POST',
-            body: formData
-        }).then(response => response.json())
-          .then(data => {
-              loading.style.display = 'none';
-              if (data.success) {
-                  preview.src = data.preview_url;
-                  preview.style.display = 'block';
-
-                  if (data.detections && data.detections.length) {
-                      detectionList.innerHTML = '';
-                      data.detections.forEach((det, i) => {
-                          const item = document.createElement('div');
-                          item.className = 'detection-item';
-                          item.textContent = `${i + 1}. 牛ID: ${det.cattle_id}，置信度: ${(det.confidence * 100).toFixed(1)}%`;
-                          detectionList.appendChild(item);
-                      });
-                      resultInfo.style.display = 'block';
-                  } else {
-                      detectionList.innerHTML = '<div class="detection-item">未检测到牛脸。</div>';
-                      resultInfo.style.display = 'block';
-                  }
-              } else {
-                  alert('检测失败，请重试。');
-              }
-          }).catch(() => {
-              loading.style.display = 'none';
-              alert('网络错误或服务器异常。');
-          });
+        data.detections.forEach((det, i) => {
+          const item = document.createElement('div');
+          item.className = 'detection-item';
+          item.textContent = `${i + 1}. 类别: ${det.class}，检测置信度: ${(det.detection_conf * 100).toFixed(1)}%，识别置信度: ${(det.class_conf * 100).toFixed(1)}%`;
+          detectionList.appendChild(item);
+        });
+        resultInfo.style.display = 'block';
+      } else {
+        detectionList.innerHTML = '<div class="detection-item">未检测到牛脸。</div>';
+        resultInfo.style.display = 'block';
+      }
+    } else {
+      alert('检测失败: ' + data.error);
     }
+  })
+  .catch(error => {
+    loading.style.display = 'none';
+    alert('检测请求出错: ' + error.message);
+  });
+});
 </script>
+
+<style>
+  .upload-container { display: flex; flex-direction: column; gap: 20px; }
+  .model-info p { margin: 4px 0; font-weight: 600; color: #34495e; }
+  .model-select label { font-weight: 600; color: #2c3e50; }
+  select#model_select { width: 100%; padding: 8px 12px; margin-top: 6px; border: 1.5px solid #3498db; border-radius: 6px; background: #fefefe; font-size: 14px; color: #2c3e50; transition: border-color 0.3s; }
+  select#model_select:hover, select#model_select:focus { border-color: #2980b9; outline: none; }
+  .note { font-size: 12px; color: #7f8c8d; margin-top: 4px; }
+  .upload-section { display: flex; gap: 12px; align-items: center; }
+  input[type="file"] { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #bdc3c7; font-size: 14px; }
+  button { background-color: #3498db; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
+  button:hover { background-color: #2980b9; }
+  .loading { text-align: center; margin-top: 20px; font-weight: 600; color: #e67e22; }
+  #preview {
+  display: block;
+  margin: 20px auto;
+  max-width: 600px;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  }
+  .result-info { margin-top: 20px; background: #ecf0f1; border-radius: 8px; padding: 15px; }
+  .result-info h3 { margin-bottom: 12px; color: #2c3e50; }
+  .detection-list .detection-item { margin-bottom: 6px; padding: 8px; background: white; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.05); font-weight: 600; color: #34495e; }
+</style>
+
 {% endblock %}

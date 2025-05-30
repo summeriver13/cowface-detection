@@ -51,7 +51,7 @@ def get_available_models():
     
     return models
 
-# 不清楚有什么作用，没有函数调用它。
+# 在yolo官方源下载一个yolo模型
 def load_yolo_model():
     # 加载固定的YOLO模型
     try:
