@@ -10,7 +10,7 @@ class ModelTraining(db.Model):
     epochs = db.Column(db.Integer, nullable=False)
     batch_size = db.Column(db.Integer, nullable=False)
     learning_rate = db.Column(db.Float, nullable=False)
-    # utcnow 在vscode中会画线形式显示，原因未知，但是不影响代码运行，这是潜在可能有bug的地方。
+    
     start_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     end_time = db.Column(db.DateTime)
     status = db.Column(db.String(20))  # training, completed, failed
@@ -19,6 +19,8 @@ class ModelTraining(db.Model):
     precision = db.Column(db.Float)
     recall = db.Column(db.Float)
     description = db.Column(db.Text)
+
+    stop_requested = db.Column(db.Boolean, default=False) 
 
     # 添加关系
     user = db.relationship('User', backref=db.backref('trainings', lazy=True))

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>编辑牛只 - 牛脸识别系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a {
+            margin-left: 10px;
+            text-decoration: none;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>编辑牛只</h1>
+        <form method="POST">
+            <label for="name">牛只名称</label>
+            <input type="text" id="name" name="name" value="{{ cattle.name }}" required>
+            <button type="submit">保存修改</button>
+            <a href="{{ url_for('cattle.cattle') }}">取消</a>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
-from flask import Blueprint, flash, render_template, request, redirect, session, url_for
+from flask import Blueprint, abort, flash, render_template, request, redirect, session, url_for
 from ..controllers import require_login
 from ..models import ModelTraining
+from ..extensions import db
 import threading
 
 train_bp = Blueprint('train-routes', __name__)
@@ -51,3 +52,15 @@ def train():
 def training_status():
     trainings = ModelTraining.query.filter_by(user_id=session['user_id']).order_by(ModelTraining.start_time.desc()).all()
     return render_template('training_status.html', trainings=trainings)
+
+@train_bp.route('/stop/<int:training_id>', methods=['POST'])
+@require_login
+def stop_training(training_id):
+    training = ModelTraining.query.get_or_404(training_id)
+    # 只允许自己终止自己的训练任务
+    if training.user_id != current_user.user_id:
+        abort(403)
+    training.stop_requested = True
+    db.session.commit()
+    flash("中止请求已提交，训练任务将在稍后终止", "info")
+    return redirect(url_for('train-routes.training_status'))

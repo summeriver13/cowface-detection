@@ -34,33 +34,96 @@
             padding: 8px;
             margin: 5px 0;
         }
+
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+        }
+        .nav a:hover {
+            color: #007BFF;
+        }
+
+        .cattle-item {
+            padding: 15px 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+            position: relative;
+        }
+        .cattle-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .cattle-item h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.4em;
+        }
+
+        .cattle-item ul {
+            padding-left: 20px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .button-group {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+
         button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
+            margin-left: 8px;
+            padding: 6px 14px;
+            font-size: 0.9em;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        button.add-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button.edit-btn {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        button.edit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        button.delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        button.delete-btn:hover {
+            background-color: #d32f2f;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="nav">
+        <nav class="nav">
             <a href="{{ url_for('index.dashboard') }}">首页</a>
             <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
             <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
             <a href="{{ url_for('train-routes.train') }}">模型训练</a>
             <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
             <a href="{{ url_for('auth.logout') }}">退出登录</a>
-        </div>
+        </nav>
         <h1>牛只管理</h1>
         
         <div class="add-form">
             <h2>添加新牛</h2>
             <form method="POST">
                 <input type="text" name="name" placeholder="输入牛只名称" required>
-                <button type="submit">添加</button>
+                <button type="submit" class="add-btn">添加</button>
             </form>
         </div>
         
@@ -71,13 +134,21 @@
                 <h3>{{ cow.name }}</h3>
                 <h4>最近识别记录:</h4>
                 <ul>
-                    {% for record in cow.records[-5:] %}
+                    {% for record in cow.records %}
                     <li>
                         时间: {{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
                         结果: {{ record.result }}
                     </li>
                     {% endfor %}
                 </ul>
+                <div class="button-group">
+                    <a href="{{ url_for('cattle.edit_cattle', cattle_id=cow.cattle_id) }}">
+                        <button type="button" class="edit-btn">编辑</button>
+                    </a>
+                    <form method="POST" action="{{ url_for('cattle.delete_cattle', cattle_id=cow.cattle_id) }}" style="display:inline;" onsubmit="return confirm('确认删除吗？');">
+                        <button type="submit" class="delete-btn">删除</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
