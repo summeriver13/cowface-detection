@@ -1,6 +1,6 @@
 from .auth import require_login
 from .dataset import create_dataset_yaml
-from .yolov8_models import get_available_models
+from .yolov8_models import get_available_models, load_yolo_model
 from .train import train_model
 
 import os

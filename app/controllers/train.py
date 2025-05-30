@@ -6,8 +6,12 @@ from ultralytics import YOLO
 from datetime import datetime
 import os
 
+# 添加全局变量来跟踪训练状态
+training_thread = None
+is_training = False
+stop_training = False  # 新增停止训练的标志
+
 def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
-    print(f"Starting training with: model={model_type}, epochs={epochs}, batch={batch_size}, lr={learning_rate}")
     
     with app.app_context():
         training = ModelTraining(

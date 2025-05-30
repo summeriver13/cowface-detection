@@ -20,7 +20,5 @@ class ModelTraining(db.Model):
     recall = db.Column(db.Float)
     description = db.Column(db.Text)
 
-    stop_requested = db.Column(db.Boolean, default=False) 
-
     # 添加关系
     user = db.relationship('User', backref=db.backref('trainings', lazy=True))

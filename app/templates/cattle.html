@@ -1,157 +1,154 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>牛只管理 - 牛脸识别系统</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-image: url('/static/background.jpg');
-            background-size: cover;
-            background-attachment: fixed;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .cattle-list {
-            margin-top: 20px;
-        }
-        .cattle-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .add-form {
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-        }
+{% extends "base.html" %}
 
-        .nav a {
-            margin-right: 15px;
-            text-decoration: none;
-            color: #333;
-            font-weight: 600;
-        }
-        .nav a:hover {
-            color: #007BFF;
-        }
-
-        .cattle-item {
-            padding: 15px 20px;
-            border: 1px solid #ddd;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: box-shadow 0.3s ease;
-            position: relative;
-        }
-        .cattle-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .cattle-item h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.4em;
-        }
-
-        .cattle-item ul {
-            padding-left: 20px;
-            color: #555;
-            font-size: 0.9em;
-        }
-
-        .button-group {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-        }
-
-        button {
-            margin-left: 8px;
-            padding: 6px 14px;
-            font-size: 0.9em;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        button.add-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-        button.edit-btn {
-            background-color: #007BFF;
-            color: white;
-        }
-
-        button.edit-btn:hover {
-            background-color: #0056b3;
-        }
-
-        button.delete-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
-        button.delete-btn:hover {
-            background-color: #d32f2f;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav class="nav">
-            <a href="{{ url_for('index.dashboard') }}">首页</a>
-            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
-            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
-            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
-            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
-            <a href="{{ url_for('auth.logout') }}">退出登录</a>
-        </nav>
-        <h1>牛只管理</h1>
-        
-        <div class="add-form">
-            <h2>添加新牛</h2>
-            <form method="POST">
-                <input type="text" name="name" placeholder="输入牛只名称" required>
-                <button type="submit" class="add-btn">添加</button>
+{% block content %}
+<div class="container mt-4">
+    <h2>牛只管理</h2>
+    
+    <!-- 添加牛只表单 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">添加新牛只</h5>
+            <form id="addCattleForm" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="cattleName" name="name" placeholder="输入牛只名称" required>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
             </form>
         </div>
-        
-        <div class="cattle-list">
-            <h2>牛只列表</h2>
-            {% for cow in cattle %}
-            <div class="cattle-item">
-                <h3>{{ cow.name }}</h3>
-                <h4>最近识别记录:</h4>
-                <ul>
-                    {% for record in cow.records %}
-                    <li>
-                        时间: {{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
-                        结果: {{ record.result }}
-                    </li>
-                    {% endfor %}
-                </ul>
-                <div class="button-group">
-                    <a href="{{ url_for('cattle.edit_cattle', cattle_id=cow.cattle_id) }}">
-                        <button type="button" class="edit-btn">编辑</button>
-                    </a>
-                    <form method="POST" action="{{ url_for('cattle.delete_cattle', cattle_id=cow.cattle_id) }}" style="display:inline;" onsubmit="return confirm('确认删除吗？');">
-                        <button type="submit" class="delete-btn">删除</button>
-                    </form>
-                </div>
+    </div>
+
+    <!-- 牛只列表 -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">牛只列表</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>最近识别记录</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cow in cattle %}
+                        <tr>
+                            <td>{{ cow.cattle_id }}</td>
+                            <td>
+                                <span class="cattle-name">{{ cow.name }}</span>
+                                <input type="text" class="form-control edit-name" style="display: none;" value="{{ cow.name }}">
+                            </td>
+                            <td>
+                                {% if cow.recent_records %}
+                                <small>最近{{ cow.recent_records|length }}条记录</small>
+                                {% else %}
+                                <small class="text-muted">暂无记录</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary view-btn" data-id="{{ cow.cattle_id }}">
+                                        查看详情
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ cow.cattle_id }}">
+                                        编辑
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success save-btn" style="display: none;" data-id="{{ cow.cattle_id }}">
+                                        保存
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ cow.cattle_id }}">
+                                        删除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            {% endfor %}
         </div>
     </div>
-</body>
-</html> 
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // 添加牛只
+    $('#addCattleForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '/cattle/add',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    });
+
+    // 编辑按钮点击
+    $('.edit-btn').on('click', function() {
+        var row = $(this).closest('tr');
+        row.find('.cattle-name').hide();
+        row.find('.edit-name').show();
+        $(this).hide();
+        row.find('.save-btn').show();
+    });
+
+    // 保存按钮点击
+    $('.save-btn').on('click', function() {
+        var row = $(this).closest('tr');
+        var id = $(this).data('id');
+        var name = row.find('.edit-name').val();
+
+        $.ajax({
+            url: '/cattle/edit/' + id,
+            method: 'POST',
+            data: { name: name },
+            success: function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    });
+
+    // 删除按钮点击
+    $('.delete-btn').on('click', function() {
+        if (!confirm('确定要删除这个牛只吗？相关的识别记录也会被删除。')) {
+            return;
+        }
+
+        var id = $(this).data('id');
+        $.ajax({
+            url: '/cattle/delete/' + id,
+            method: 'POST',
+            success: function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    });
+
+    // 查看详情按钮点击
+    $('.view-btn').on('click', function() {
+        var id = $(this).data('id');
+        window.location.href = '/cattle/detail/' + id;
+    });
+});
+</script>
+{% endblock %} 

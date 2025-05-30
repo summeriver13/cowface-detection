@@ -1,4 +1,5 @@
 .venv
+.conda
 app/__pycache__
 app/models/__pycache__
 app/routes/__pycache__
