@@ -1,36 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>牛只管理</h2>
+<div class="container mt-5">
+    <h2 class="mb-4">牛只管理</h2>
     
     <!-- 添加牛只表单 -->
-    <div class="card mb-4">
+    <div class="card mb-5 shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">添加新牛只</h5>
-            <form id="addCattleForm" class="row g-3">
-                <div class="col-md-6">
-                    <input type="text" class="form-control" id="cattleName" name="name" placeholder="输入牛只名称" required>
+            <h5 class="card-title mb-3">添加新牛只</h5>
+            <form id="addCattleForm" class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <input type="text" class="form-control form-control-lg" id="cattleName" name="name" placeholder="输入牛只名称" required autofocus>
                 </div>
-                <div class="col-md-6">
-                    <button type="submit" class="btn btn-primary">添加</button>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">添加牛只</button>
                 </div>
             </form>
+            <div id="add-error" class="text-danger mt-2" style="display:none;"></div>
         </div>
     </div>
 
     <!-- 牛只列表 -->
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">牛只列表</h5>
+            <h5 class="card-title mb-4">牛只列表</h5>
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <th>ID</th>
-                            <th>名称</th>
-                            <th>最近识别记录</th>
-                            <th>操作</th>
+                            <th scope="col" style="width: 6%">ID</th>
+                            <th scope="col" style="width: 35%">名称</th>
+                            <th scope="col" style="width: 35%">最近识别记录</th>
+                            <th scope="col" style="width: 24%">操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,29 +40,21 @@
                             <td>{{ cow.cattle_id }}</td>
                             <td>
                                 <span class="cattle-name">{{ cow.name }}</span>
-                                <input type="text" class="form-control edit-name" style="display: none;" value="{{ cow.name }}">
+                                <input type="text" class="form-control form-control-sm edit-name" style="display: none;" value="{{ cow.name }}">
                             </td>
                             <td>
                                 {% if cow.recent_records %}
-                                <small>最近{{ cow.recent_records|length }}条记录</small>
+                                <small class="text-secondary">最近 {{ cow.recent_records|length }} 条记录</small>
                                 {% else %}
-                                <small class="text-muted">暂无记录</small>
+                                <small class="text-muted fst-italic">暂无记录</small>
                                 {% endif %}
                             </td>
                             <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary view-btn" data-id="{{ cow.cattle_id }}">
-                                        查看详情
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ cow.cattle_id }}">
-                                        编辑
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success save-btn" style="display: none;" data-id="{{ cow.cattle_id }}">
-                                        保存
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ cow.cattle_id }}">
-                                        删除
-                                    </button>
+                                <div class="btn-group" role="group" aria-label="操作按钮组">
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-btn" data-id="{{ cow.cattle_id }}">查看详情</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ cow.cattle_id }}">编辑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-success save-btn" style="display: none;" data-id="{{ cow.cattle_id }}">保存</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ cow.cattle_id }}">删除</button>
                                 </div>
                             </td>
                         </tr>
@@ -69,86 +62,116 @@
                     </tbody>
                 </table>
             </div>
+            <div id="action-error" class="text-danger mt-3" style="display:none;"></div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-$(document).ready(function() {
+$(function() {
     // 添加牛只
     $('#addCattleForm').on('submit', function(e) {
         e.preventDefault();
+        $('#add-error').hide();
+        const $btn = $(this).find('button[type="submit"]');
+        $btn.prop('disabled', true);
+
         $.ajax({
             url: '/cattle/add',
             method: 'POST',
             data: $(this).serialize(),
-            success: function(response) {
+            success(response) {
                 if (response.status === 'success') {
                     location.reload();
                 } else {
-                    alert(response.message);
+                    $('#add-error').text(response.message).show();
                 }
+            },
+            error() {
+                $('#add-error').text('请求失败，请稍后重试。').show();
+            },
+            complete() {
+                $btn.prop('disabled', false);
             }
         });
     });
 
-    // 编辑按钮点击
-    $('.edit-btn').on('click', function() {
-        var row = $(this).closest('tr');
-        row.find('.cattle-name').hide();
-        row.find('.edit-name').show();
+    // 事件委托 - 编辑按钮
+    $(document).on('click', '.edit-btn', function() {
+        const $row = $(this).closest('tr');
+        $row.find('.cattle-name').hide();
+        const $input = $row.find('.edit-name');
+        $input.show().focus();
         $(this).hide();
-        row.find('.save-btn').show();
+        $row.find('.save-btn').show();
+        $('#action-error').hide();
     });
 
-    // 保存按钮点击
-    $('.save-btn').on('click', function() {
-        var row = $(this).closest('tr');
-        var id = $(this).data('id');
-        var name = row.find('.edit-name').val();
+    // 事件委托 - 保存按钮
+    $(document).on('click', '.save-btn', function() {
+        const $row = $(this).closest('tr');
+        const id = $(this).data('id');
+        const name = $row.find('.edit-name').val().trim();
 
-        $.ajax({
-            url: '/cattle/edit/' + id,
-            method: 'POST',
-            data: { name: name },
-            success: function(response) {
-                if (response.status === 'success') {
-                    location.reload();
-                } else {
-                    alert(response.message);
-                }
-            }
-        });
-    });
-
-    // 删除按钮点击
-    $('.delete-btn').on('click', function() {
-        if (!confirm('确定要删除这个牛只吗？相关的识别记录也会被删除。')) {
+        if (!name) {
+            $('#action-error').text('牛只名称不能为空。').show();
             return;
         }
+        $('#action-error').hide();
 
-        var id = $(this).data('id');
+        const $btn = $(this);
+        $btn.prop('disabled', true);
+
         $.ajax({
-            url: '/cattle/delete/' + id,
+            url: `/cattle/edit/${id}`,
             method: 'POST',
-            success: function(response) {
+            data: { name },
+            success(response) {
                 if (response.status === 'success') {
                     location.reload();
                 } else {
-                    alert(response.message);
+                    $('#action-error').text(response.message).show();
                 }
+            },
+            error() {
+                $('#action-error').text('请求失败，请稍后重试。').show();
+            },
+            complete() {
+                $btn.prop('disabled', false);
             }
         });
     });
 
-    // 查看详情按钮点击
-    $('.view-btn').on('click', function() {
-        var id = $(this).data('id');
-        window.location.href = '/cattle/detail/' + id;
+    // 事件委托 - 删除按钮
+    $(document).on('click', '.delete-btn', function() {
+        if (!confirm('确定要删除这个牛只吗？相关的识别记录也会被删除。')) return;
+
+        const id = $(this).data('id');
+        $('#action-error').hide();
+
+        $.ajax({
+            url: `/cattle/delete/${id}`,
+            method: 'POST',
+            success(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    $('#action-error').text(response.message).show();
+                }
+            },
+            error() {
+                $('#action-error').text('请求失败，请稍后重试。').show();
+            }
+        });
+    });
+
+    // 事件委托 - 查看详情
+    $(document).on('click', '.view-btn', function() {
+        const id = $(this).data('id');
+        window.location.href = `/cattle/detail/${id}`;
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

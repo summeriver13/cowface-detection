@@ -1,86 +1,132 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>模型训练 - 牛脸识别系统</title>
-    <style>
-        /* 复用现有样式 */
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-image: url('/static/background.jpg');
-            background-size: cover;
-            background-attachment: fixed;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        select, input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="nav">
-            <a href="{{ url_for('index.dashboard') }}">首页</a>
-            <a href="{{ url_for('cattle.cattle') }}">牛只管理</a>
-            <a href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
-            <a href="{{ url_for('train-routes.train') }}">模型训练</a>
-            <a href="{{ url_for('train-routes.training_status') }}">训练状态</a>
-            <a href="{{ url_for('auth.logout') }}">退出登录</a>
-        </div>
+{% extends "base.html" %}
 
-        <h1>模型训练</h1>
-        
-        <div class="training-form">
-            <form method="POST">
-                <div class="form-group">
-                    <label>训练轮数 (epochs):</label>
-                    <input type="number" name="epochs" value="50" min="1" max="1000">
-                </div>
-                
-                <div class="form-group">
-                    <label>批次大小 (batch size):</label>
-                    <input type="number" name="batch_size" value="16" min="1" max="128">
-                </div>
-                
-                <div class="form-group">
-                    <label>学习率 (learning rate):</label>
-                    <input type="number" name="learning_rate" value="0.001" step="0.0001" min="0.0001" max="0.1">
-                </div>
-                
-                <div class="form-group">
-                    <label>模型类型:</label>
-                    <select name="model_type">
-                        <option value="n">YOLOv8n (小)</option>
-                        <option value="s">YOLOv8s (中)</option>
-                        <option value="m">YOLOv8m (大)</option>
-                        <option value="l">YOLOv8l (特大)</option>
-                    </select>
-                </div>
-                
-                <button type="submit">开始训练</button>
-            </form>
-        </div>
-        
-        <div class="training-notes">
-            <h3>训练说明:</h3>
-            <ul>
-                <li>训练过程可能需要较长时间，请耐心等待</li>
-                <li>训练结果会自动保存</li>
-                <li>可以在训练状态页面查看进度</li>
-                <li>建议使用GPU进行训练</li>
-            </ul>
-        </div>
+{% block content %}
+<div class="container training-container">
+    <h1>模型训练</h1>
+    
+    <div class="training-form">
+        <form method="POST">
+            <div class="form-group">
+                <label for="epochs">训练轮数 (epochs):</label>
+                <input id="epochs" type="number" name="epochs" value="50" min="1" max="1000">
+            </div>
+            
+            <div class="form-group">
+                <label for="batch_size">批次大小 (batch size):</label>
+                <input id="batch_size" type="number" name="batch_size" value="16" min="1" max="128">
+            </div>
+            
+            <div class="form-group">
+                <label for="learning_rate">学习率 (learning rate):</label>
+                <input id="learning_rate" type="number" name="learning_rate" value="0.001" step="0.0001" min="0.0001" max="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="model_type">模型类型:</label>
+                <select id="model_type" name="model_type">
+                    <option value="n">YOLOv8n (小)</option>
+                    <option value="s">YOLOv8s (中)</option>
+                    <option value="m">YOLOv8m (大)</option>
+                    <option value="l">YOLOv8l (特大)</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-submit">开始训练</button>
+        </form>
     </div>
-</body>
-</html> 
+    
+    <div class="training-notes">
+        <h3>训练说明:</h3>
+        <ul>
+            <li>训练过程可能需要较长时间，请耐心等待</li>
+            <li>训练结果会自动保存</li>
+            <li>可以在训练状态页面查看进度</li>
+            <li>建议使用GPU进行训练</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.training-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.training-container h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.training-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #555;
+}
+
+.form-group input, 
+.form-group select {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+    outline: none;
+    border-color: #409eff;
+    box-shadow: 0 0 5px #409eff;
+}
+
+.btn-submit {
+    background-color: #409eff;
+    border: none;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-submit:hover {
+    background-color: #66b1ff;
+}
+
+.training-notes {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #666;
+}
+
+.training-notes h3 {
+    margin-bottom: 12px;
+    color: #444;
+}
+
+.training-notes ul {
+    padding-left: 20px;
+}
+
+.training-notes li {
+    margin-bottom: 8px;
+}
+</style>
+{% endblock %}

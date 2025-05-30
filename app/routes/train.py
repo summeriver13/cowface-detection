@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, flash, render_template, request, redirect, session, url_for
+from flask import Blueprint, flash, render_template, request, redirect, session, url_for
 from ..controllers import require_login
 from ..models import ModelTraining
 from ..extensions import db
@@ -52,3 +52,21 @@ def train():
 def training_status():
     trainings = ModelTraining.query.filter_by(user_id=session['user_id']).order_by(ModelTraining.start_time.desc()).all()
     return render_template('training_status.html', trainings=trainings)
+
+@train_bp.route('/delete_training/<int:training_id>', methods=['POST'])
+@require_login
+def delete_training(training_id):
+    training = ModelTraining.query.get(training_id)
+    if not training or training.user_id != session['user_id']:
+        flash('训练记录不存在或无权限删除')
+        return redirect(url_for('train-routes.training_status'))
+    
+    try:
+        db.session.delete(training)
+        db.session.commit()
+        flash('训练记录已删除')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'删除失败: {str(e)}')
+    
+    return redirect(url_for('train-routes.training_status'))
