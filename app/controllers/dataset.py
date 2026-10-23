@@ -1,6 +1,9 @@
-from ..config import DATASET_PATH, DATASET_CONFIG
 import os
+
 import yaml
+
+from ..config import DATASET_CONFIG, DATASET_PATH
+
 
 def create_dataset_yaml():
     """创建数据集配置文件"""

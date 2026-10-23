@@ -1,5 +1,7 @@
-from ..extensions import db
 import datetime
+
+from ..extensions import db
+
 
 # 训练模型表
 class ModelTraining(db.Model):

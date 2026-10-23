@@ -9,3 +9,5 @@ ml_models
 instance
 *.db__pycache__/
 *.pyc
+.ci
+outputs
