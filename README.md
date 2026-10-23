@@ -96,18 +96,46 @@ FLASK_DEBUG=1 python run.py    # 带调试与自动重载
 - 牛只管理：增删改查、每只牛最近 5 条识别记录、完整历史
 - 在网页里发起 YOLOv8 微调训练（模型规格、epochs、batch size、学习率），后台线程执行，状态页轮询数据库
 
+## HTTP 接口
+
+页面与数据接口分两组蓝图：页面在根路径（`web.*`），JSON 接口统一在 `/api` 前缀下（`api.*`）。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/login`、`/register`、`/logout` | 认证页面 |
+| GET | `/dashboard` | 首页，含牛只/记录/训练计数 |
+| GET | `/cattle`、`/cattle/<id>` | 牛只列表、详情 |
+| GET | `/detect`、`/train`、`/train/status` | 检测、训练、训练状态页 |
+| POST | `/api/cattle` | 新建牛只（form 或 JSON） |
+| PATCH | `/api/cattle/<id>` | 改名 |
+| DELETE | `/api/cattle/<id>` | 删除牛只与其识别记录 |
+| POST | `/api/detect` | 上传图片，返回标注图 base64 与检测列表 |
+| GET | `/api/train` | 训练任务列表（状态页每 3 秒轮询） |
+| POST | `/api/train` | 启动训练，返回 202 |
+| DELETE | `/api/train/<id>` | 删除训练记录 |
+
+约定：成功 `{"ok": true, "data": ...}`，失败 `{"ok": false, "error": {"code", "message"}}` 并带上对应 HTTP 状态码；所有写请求要带 `X-CSRF-Token`（页面从 `<meta name="csrf-token">` 取）或表单里的 `csrf_token` 字段。
+
+```bash
+python scripts/smoke_test.py    # 22 项端到端检查：页面、接口、CSRF、权限
+```
+
 ## 目录结构
 
 ```
 run.py                        入口
 scripts/evaluate.py           自带划分上的检测 / 识别 / open-set 评测
 scripts/evaluate_opencows.py  跨数据集评测（OpenCows2020）
-app/__init__.py               create_app：配置、蓝图注册、建表
-app/config.py                 路径与环境变量
+scripts/smoke_test.py         端到端冒烟测试
+app/__init__.py               create_app：配置、蓝图注册、建表、错误处理
+app/config.py                 路径、环境变量、模型规格
+app/security.py               CSRF token 生成与校验
+app/routes/                   页面蓝图 web.*：auth / dashboard / cattle / detect / train
+app/api/                      JSON 蓝图 api.*（前缀 /api）：cattle / detect / train
 app/models/                   ORM：User / Cattle / RecognitionRecord / ModelTraining
 app/controllers/              业务逻辑：识别器、数据集 yaml、训练
-app/routes/                   蓝图：auth / index / cattle / detect / train
-app/templates/                Jinja2 页面
+app/templates/                Jinja2 页面，全部继承 base.html
+app/static/                   css/app.css、js/{api,cattle,detect,train,training_status}.js
 docs/preview.png              README 里的检测样例
 ```
 

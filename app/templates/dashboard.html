@@ -1,58 +1,45 @@
 {% extends "base.html" %}
 
+{% block title %}首页 · 牛脸识别系统{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <!-- 欢迎信息 -->
-    <div class="card bg-white bg-opacity-95 p-4 rounded text-center mb-5">
-        <h1 class="mb-3 text-primary">欢迎使用牛脸识别系统</h1>
-        <p class="lead text-secondary">您好, {{ user.username }}! 这是一个基于深度学习的牛脸检测和识别系统。</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h3 mb-1">欢迎，{{ user.username }}</h1>
+            <p class="text-muted mb-0">YOLOv8 定位牛脸，EfficientNet 判断个体</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="{{ url_for('web.detect.detect_page') }}">开始检测</a>
+            <a class="btn btn-outline-secondary" href="{{ url_for('web.cattle.cattle_list') }}">管理牛只</a>
+        </div>
     </div>
 
-    <!-- 功能介绍 -->
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="row row-cols-1 row-cols-md-3 g-3">
         <div class="col">
-            <div class="card h-100 bg-white bg-opacity-90">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-primary">牛脸检测</h3>
-                    <p class="card-text text-secondary">使用YOLOv8模型进行精确的牛脸检测</p>
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">牛只</p>
+                    <p class="display-6 mb-0">{{ stats.cattle }}</p>
                 </div>
             </div>
         </div>
         <div class="col">
-            <div class="card h-100 bg-white bg-opacity-90">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-primary">个体识别</h3>
-                    <p class="card-text text-secondary">使用EfficientNet进行牛只个体识别</p>
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">识别记录</p>
+                    <p class="display-6 mb-0">{{ stats.records }}</p>
                 </div>
             </div>
         </div>
         <div class="col">
-            <div class="card h-100 bg-white bg-opacity-90">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-primary">数据管理</h3>
-                    <p class="card-text text-secondary">便捷的牛只信息和识别记录管理</p>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card h-100 bg-white bg-opacity-90">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-primary">模型训练</h3>
-                    <p class="card-text text-secondary">支持自定义数据集的模型训练</p>
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">训练任务</p>
+                    <p class="display-6 mb-0">{{ stats.trainings }}</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- 消息提示 -->
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div class="alert alert-info mt-4" role="alert">
-            {% for message in messages %}
-                <p class="mb-1">{{ message }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-    {% endwith %}
 </div>
 {% endblock %}

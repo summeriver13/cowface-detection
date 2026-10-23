@@ -1,7 +1,10 @@
-from .auth import auth_bp
-from .cattle import cattle_bp
-from .detect import detect_bp
-from .index import index_bp
-from .train import train_bp
+from flask import Blueprint
 
-__all__ = ["auth_bp", "cattle_bp", "detect_bp", "index_bp", "train_bp"]
+web_bp = Blueprint("web", __name__)
+
+from . import auth, cattle, dashboard, detect, train  # noqa: E402  子蓝图要在 web_bp 定义之后导入
+
+for child in (auth.auth_bp, dashboard.dashboard_bp, cattle.cattle_bp, detect.detect_bp, train.train_bp):
+    web_bp.register_blueprint(child)
+
+__all__ = ["web_bp"]
