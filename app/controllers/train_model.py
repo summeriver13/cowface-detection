@@ -1,12 +1,12 @@
 from ..config import PRETRAINED_MODEL_PATH
 from ..extensions import db
 from ..models import ModelTraining
+from ..models.recognition_record import utcnow
 
 from ultralytics import YOLO
 from datetime import datetime
 import os
 import torch
-import multiprocessing
 
 def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
     with app.app_context():
@@ -64,14 +64,15 @@ def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
             print("Training completed successfully")
             
             # 更新训练结果
-            training.end_time = datetime.utcnow()
-            
-            if hasattr(results, 'maps'):
-                training.map50 = results.maps.get(50, None)
-                # 这里假设results有map50_95字段或者你需要自己计算，先用getattr避免异常
-                training.map50_95 = getattr(results, 'map50_95', None)
-                training.precision = getattr(results, 'precision', None)
-                training.recall = getattr(results, 'recall', None)
+            training.end_time = utcnow()
+
+            # ultralytics 的评估指标挂在 results.box 上，取不到就留空而不是猜字段名
+            box = getattr(results, 'box', None)
+            if box is not None:
+                training.map50 = float(box.map50)
+                training.map50_95 = float(box.map)
+                training.precision = float(box.mp)
+                training.recall = float(box.mr)
             training.status = 'completed'
             training.description = f'Training completed. Results saved in {results.save_dir}'
             
@@ -79,7 +80,6 @@ def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
             print(f"Training error: {str(e)}")
             training.status = 'failed'
             training.description = str(e)
-            raise
 
         finally:
             db.session.commit()

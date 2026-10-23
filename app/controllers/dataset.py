@@ -54,7 +54,7 @@ def create_dataset_yaml():
     
     # 保存配置
     print("\nSaving dataset configuration...")
-    print(f"Final config:")
+    print("Final config:")
     for k, v in config.items():
         print(f"  {k}: {v}")
     

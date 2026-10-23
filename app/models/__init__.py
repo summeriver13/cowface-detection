@@ -1,4 +1,6 @@
-from .user import User
-from .cattle import Cattle, CowFaceRecognizer
-from .recognition_record import RecognitionRecord
+from .cattle import Cattle
 from .model_training import ModelTraining
+from .recognition_record import RecognitionRecord
+from .user import User
+
+__all__ = ["Cattle", "ModelTraining", "RecognitionRecord", "User"]

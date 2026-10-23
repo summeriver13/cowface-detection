@@ -1,5 +1,6 @@
-from collections import defaultdict
 from flask import Blueprint, flash, jsonify, render_template, request, redirect, session, url_for
+from sqlalchemy.exc import SQLAlchemyError
+
 from ..controllers import require_login
 from ..models import Cattle, RecognitionRecord
 from ..extensions import db
@@ -35,7 +36,7 @@ def add_cattle():
     try:
         db.session.commit()
         return jsonify({'status': 'success', 'message': '添加成功', 'cattle_id': cattle.cattle_id})
-    except:
+    except SQLAlchemyError:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': '添加失败'})
 
@@ -55,7 +56,7 @@ def edit_cattle(cattle_id):
     try:
         db.session.commit()
         return jsonify({'status': 'success', 'message': '修改成功'})
-    except:
+    except SQLAlchemyError:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': '修改失败'})
 
@@ -75,7 +76,7 @@ def delete_cattle(cattle_id):
         db.session.delete(cattle)
         db.session.commit()
         return jsonify({'status': 'success', 'message': '删除成功'})
-    except:
+    except SQLAlchemyError:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': '删除失败'})
 

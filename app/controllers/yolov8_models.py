@@ -1,14 +1,11 @@
-from ..config import PRETRAINED_MODEL_PATH, YOLO_MODEL_PATH
-from ..extensions import db
-from ..models import ModelTraining
+from ..config import PRETRAINED_MODEL_PATH
 
 from ultralytics import YOLO
-from datetime import datetime
 import glob
 import os
 
+
 def get_available_models():
-    
     """获取所有可用的模型"""
     models = {
         'pretrained': {
@@ -21,14 +18,11 @@ def get_available_models():
         },
         'trained': []  # 训练好的模型
     }
-    
-    # 检查预训练模型是否已下载
+
     for model_type in models['pretrained']:
-        path = PRETRAINED_MODEL_PATH[model_type]
-        if os.path.exists(path):
+        if os.path.exists(PRETRAINED_MODEL_PATH[model_type]):
             models['pretrained'][model_type]['available'] = True
-    
-    # 检查训练好的模型
+
     if os.path.exists('runs/train'):
         for model_dir in glob.glob('runs/train/*/weights/best.pt'):
             name = model_dir.split(os.sep)[-3]  # 获取训练实验名称
@@ -37,29 +31,16 @@ def get_available_models():
                 'path': model_dir,
                 'available': True
             })
-    
-    # 确保至少有一个可用模型
+
+    # 一个可用模型都没有时下载最小的那个，避免检测页是空的
     if not any(m['available'] for m in models['pretrained'].values()) and not models['trained']:
         try:
             os.makedirs('ml_models/pretrained_models', exist_ok=True)
             print("Downloading YOLOv8n model...")
             model = YOLO('yolov8n.pt')
-            model.save(PRETRAINED_MODEL_PATH['n'])
+            os.replace(model.ckpt_path, PRETRAINED_MODEL_PATH['n'])
             models['pretrained']['n']['available'] = True
         except Exception as e:
             print(f"Error downloading model: {str(e)}")
-    
-    return models
 
-# 在yolo官方源下载一个yolo模型
-def load_yolo_model():
-    # 加载固定的YOLO模型
-    try:
-        if not os.path.exists(YOLO_MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found: {YOLO_MODEL_PATH}")
-        model = YOLO(YOLO_MODEL_PATH)
-        return model
-    except Exception as e:
-        print(f"Error loading model: {str(e)}")
-        # 如果加载失败，使用默认模型
-        return YOLO('yolov8n.pt')
+    return models

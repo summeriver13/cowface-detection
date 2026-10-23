@@ -6,3 +6,5 @@ app/routes/__pycache__
 app/controllers/__pycache__
 runs
 ml_models
+instance
+*.db
