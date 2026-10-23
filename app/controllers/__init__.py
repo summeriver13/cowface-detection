@@ -1,10 +1,14 @@
 from .auth import require_login
 from .dataset import create_dataset_yaml
-from .yolov8_models import get_available_models, load_yolo_model
+from .recognizer import CowFaceRecognizer, get_recognizer
 from .train_model import train_model
+from .yolov8_models import get_available_models
 
-import os
-
-# 添加环境变量来禁用安全检查
-os.environ['TORCH_SAFE_LOADING'] = '1'
-os.environ['ULTRALYTICS_SKIP_SAFETY_CHECK'] = '1'
+__all__ = [
+    "CowFaceRecognizer",
+    "create_dataset_yaml",
+    "get_available_models",
+    "get_recognizer",
+    "require_login",
+    "train_model",
+]
