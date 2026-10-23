@@ -12,7 +12,7 @@
 <p align="center">牛脸检测 + 个体识别：YOLOv8 定位牛脸，EfficientNet-B0 判断是哪一头牛，Flask 提供网页界面。<br>
 检测 mAP50 <b>0.974</b>（无泄漏划分）· 已知牛识别 top-1 <b>0.967</b> · 陌生牛拒识 AUROC <b>0.912</b></p>
 
-<p align="center"><img src="docs/preview.png" width="760" alt="检测样例"></p>
+<p align="center"><img src="docs/preview.webp" width="440" alt="检测样例"></p>
 
 ## 目录
 
@@ -126,7 +126,7 @@ scripts/plot_experiments.py    重画实验图
 requirements-web.txt           仅 Web 依赖（CI 用，不装 torch）
 .github/workflows/ci.yml       CI：ruff + 惰性导入检查 + 冒烟测试
 docs/experiments.md            实验记录
-docs/preview.png               检测样例
+docs/preview.webp              检测样例（原 PNG 1.25 MB → WebP 103 KB）
 ```
 
 ## 环境变量
