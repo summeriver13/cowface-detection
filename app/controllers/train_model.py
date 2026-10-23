@@ -19,9 +19,8 @@ def _apply_metrics(training: ModelTraining, results) -> None:
 
 
 def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
-    from ultralytics import YOLO
-
     import torch
+    from ultralytics import YOLO
 
     with app.app_context():
         training = ModelTraining(
@@ -82,7 +81,7 @@ def train_model(app, model_type, epochs, batch_size, learning_rate, user_id):
             training.description = f"Training completed. Results saved in {results.save_dir}"
 
         except Exception as e:
-            print(f"Training error: {str(e)}")
+            print(f"Training error: {e!s}")
             training.status = "failed"
             training.description = str(e)
 

@@ -15,7 +15,7 @@ jobs:
           enable-cache: true
       - run: uv venv --python 3.12
       - name: 只装 Web 依赖，ML 栈是惰性导入
-        run: uv pip install ruff -r requirements-web.txt
+        run: uv pip install ruff==0.17.2 -r requirements-web.txt
       - run: uv run ruff check app scripts
       - name: app 导入不许拉起 torch
         run: uv run python -c "import sys, app; assert 'torch' not in sys.modules, 'app 把 torch 拉起来了'; print('lazy imports ok')"

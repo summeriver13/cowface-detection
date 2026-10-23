@@ -1,11 +1,11 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..extensions import db
 
 
 def utcnow() -> datetime:
     """列类型是 naive DATETIME，统一存 UTC，展示时由前端换成本地时间。"""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class RecognitionRecord(db.Model):
