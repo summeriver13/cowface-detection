@@ -1,15 +1,13 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-
-import cv2
-import torch
-from PIL import Image
-from torch import nn
-from torchvision import models, transforms
-from ultralytics import YOLO
+from typing import TYPE_CHECKING
 
 from ..config import CLASSIFIER_CLASSES_PATH, CLASSIFIER_MODEL_PATH, TRAIN_DIR, YOLO_MODEL_PATH
+
+if TYPE_CHECKING:
+    import numpy as np
+    from torch import nn
 
 DETECTION_CONFIDENCE_THRESHOLD = 0.5
 CLASSIFIER_INPUT_SIZE = 224
@@ -34,7 +32,16 @@ def _load_class_names(train_dir: Path) -> list[str]:
 
 
 class CowFaceRecognizer:
+    """YOLO 检测 + EfficientNet 分类。torch / ultralytics 只在实例化时导入，
+
+    这样不装 ML 依赖也能启动 Web 应用，只有真正推理时才需要权重与深度学习栈。
+    """
+
     def __init__(self, train_dir: Path) -> None:
+        import torch
+        from torchvision import transforms
+        from ultralytics import YOLO
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.yolo_model = YOLO(str(YOLO_MODEL_PATH))
         self.class_names = _load_class_names(Path(train_dir))
@@ -47,7 +54,11 @@ class CowFaceRecognizer:
             ]
         )
 
-    def _load_classifier_model(self) -> nn.Module:
+    def _load_classifier_model(self) -> "nn.Module":
+        import torch
+        from torch import nn
+        from torchvision import models
+
         model = models.efficientnet_b0(weights=None)
         model.classifier = nn.Sequential(
             nn.Linear(model.classifier[1].in_features, 512),
@@ -59,7 +70,11 @@ class CowFaceRecognizer:
         model.load_state_dict(state_dict)
         return model.to(self.device).eval()
 
-    def detect_and_recognize(self, image) -> list[dict]:
+    def detect_and_recognize(self, image: "np.ndarray") -> list[dict]:
+        import cv2
+        import torch
+        from PIL import Image
+
         results = self.yolo_model(image)
         img_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
@@ -80,10 +95,10 @@ class CowFaceRecognizer:
 
                 detections.append(
                     {
-                        'box': [x1, y1, x2, y2],
-                        'detection_conf': f'{confidence:.2f}',
-                        'class': self.class_names[predicted.item()],
-                        'class_conf': f'{float(class_confidence[0]):.2f}',
+                        "box": [x1, y1, x2, y2],
+                        "detection_conf": f"{confidence:.2f}",
+                        "class": self.class_names[predicted.item()],
+                        "class_conf": f"{float(class_confidence[0]):.2f}",
                     }
                 )
 

@@ -5,6 +5,8 @@
   <img alt="Flask" src="https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white">
   <img alt="YOLOv8" src="https://img.shields.io/badge/detection-YOLOv8-FF6F00">
   <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white">
+  <img alt="CI" src="https://github.com/summeriver13/cowface-detection/actions/workflows/ci.yml/badge.svg">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
 <p align="center">牛脸检测 + 个体识别：YOLOv8 定位牛脸，EfficientNet-B0 判断是哪一头牛，Flask 提供网页界面。<br>
@@ -22,6 +24,7 @@
 - [环境变量](#环境变量)
 - [已知限制](#已知限制)
 - [数据来源](#数据来源)
+- [许可](#许可)
 
 ## 结果速览
 
@@ -59,6 +62,8 @@ uv venv && uv pip install -r requirements.txt
 # 或者
 python -m venv .venv && .venv/Scripts/pip install -r requirements.txt
 ```
+
+`requirements.txt` 会装 torch 与 ultralytics（数 GB）。只想先看网页骨架、不跑推理，用 `requirements-web.txt`：应用照常启动，只有上传图片的接口会报依赖缺失。
 
 ### 3. 启动
 
@@ -117,6 +122,9 @@ scripts/train_detect_opencows.py   官方 10 折重训检测
 scripts/train_ident_opencows.py    闭集识别 + 开集拒识
 scripts/opencows.py            OpenCows2020 解包与划分读取
 scripts/smoke_test.py          端到端冒烟测试
+scripts/plot_experiments.py    重画实验图
+requirements-web.txt           仅 Web 依赖（CI 用，不装 torch）
+.github/workflows/ci.yml       CI：ruff + 惰性导入检查 + 冒烟测试
 docs/experiments.md            实验记录
 docs/preview.png               检测样例
 ```
@@ -148,3 +156,10 @@ docs/preview.png               检测样例
 | [Cows2021](https://data.bris.ac.uk/data/dataset/4vnrca7qw1642qlwxjadp87h7) | 17.6 GiB：检测、182 头牛识别、官方权重 | Non-Commercial Government Licence |
 
 两者都来自布里斯托大学的同一课题组，非商业许可：可用于研究与演示，不能商用。参考文献：*Visual Identification of Individual Holstein Friesian Cattle via Deep Metric Learning*（[arXiv:2006.09205](https://arxiv.org/abs/2006.09205)）。
+
+## 许可
+
+本仓库代码以 [MIT](LICENSE) 发布。两处例外：
+
+- 数据集与预训练权重不随仓库分发；`ml_models.zip` 里的数据由作者自采，OpenCows2020 / Cows2021 是 Non-Commercial Government Licence。
+- 依赖中的 Ultralytics YOLOv8 是 AGPL-3.0：把推理能力作为网络服务对外提供时，需遵守 AGPL 的源码开放要求，或购买 Ultralytics 商业许可。

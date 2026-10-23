@@ -1,10 +1,7 @@
-Flask>=3.1
-Flask-SQLAlchemy>=3.1
+-r requirements-web.txt
 ultralytics>=8.3
 torch>=2.2
 torchvision>=0.17
 opencv-python>=4.10
 Pillow>=10.4
 numpy>=1.26
-PyYAML>=6.0
-PyMySQL>=1.1

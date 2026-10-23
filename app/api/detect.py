@@ -1,8 +1,6 @@
 import base64
 from pathlib import Path
 
-import cv2
-import numpy as np
 from flask import Blueprint, request, session
 
 from ..controllers import get_recognizer, require_login
@@ -22,10 +20,16 @@ LABEL_PADDING = 10
 def _decode_upload(file):
     if Path(file.filename or "").suffix.lower() not in ALLOWED_SUFFIXES:
         return None
+
+    import cv2
+    import numpy as np
+
     return cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
 
 
 def _annotate(image, detections):
+    import cv2
+
     for detection in detections:
         x1, y1, x2, y2 = detection["box"]
         label = f"{detection['class']} ({detection['class_conf']})"
@@ -76,6 +80,8 @@ def run_detection():
         detections = get_recognizer().detect_and_recognize(image)
     except Exception as exc:
         return fail("inference_failed", f"识别失败: {exc}", 500)
+
+    import cv2
 
     saved = _persist(detections)
     encoded, buffer = cv2.imencode(".jpg", _annotate(image, detections))
