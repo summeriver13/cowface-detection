@@ -28,6 +28,29 @@ python scripts/evaluate.py                        # 自带划分：检测 + 分�
 python scripts/evaluate_opencows.py --zip OpenCows2020.zip --workdir opencows_eval   # 跨数据集
 ```
 
+### 换成无泄漏划分重训
+
+上表的 0.941 之所以不能当能力看，是因为划分本身有泄漏。要一个能对外说的数字，就得换一套按身份分组的划分：OpenCows2020 自带了官方的 10 折检测划分（`10-fold-CV.json`，按牛只身份分组）和 9 个识别划分（`75-25.json` 等，每折给出哪些牛当已知类、哪些只在测试出现）。
+
+| 任务 | 划分 | 训练 / 测试 | 结果 |
+| --- | --- | --- | --- |
+| 检测 | `10-fold-CV` fold 0 | 6,338 / 705 张 | mAP50 **0.974**、mAP50-95 0.761、P 0.945、R 0.949 |
+| 识别 · 闭集 | `75-25` fold 0，35 头已知 | 3,124 / 367 张 | top-1 **0.967** |
+| 识别 · 开集 | 同上，11 头只在测试出现 | 129 张 | AUROC **0.912**，误拒 5% 时拒识率 0.574 |
+| 识别 · 闭集 | `50-50` fold 0，23 头已知 | 2,122 / 249 张 | top-1 0.956 |
+| 识别 · 开集 | 同上，23 头只在测试出现 | 247 张 | AUROC 0.896，拒识率 0.583 |
+
+反向也测了一次：把 OpenCows2020 重训出来的检测器拿回本仓库的 test（107 张）跑，mAP50 0.355。也就是说域偏移是双向的 —— 自带权重去 OpenCows 只有 0.055，OpenCows 权重回来也只有 0.355。这些数字说明模型记住的是"哪个牧场"，不是"牛脸长什么样"。
+
+检测 30 轮在 RTX 4060 Ti 上约 16 分钟，识别 20 轮约 6 分钟：
+
+```bash
+python scripts/train_detect_opencows.py --zip OpenCows2020.zip --workdir opencows_work --fold 0 --epochs 30 --device 0
+python scripts/train_ident_opencows.py  --zip OpenCows2020.zip --workdir opencows_work --split 75-25 --fold 0 --epochs 20 --device cuda
+```
+
+识别脚本会把 checkpoint 存到 `outputs/`，里面的 `classes` 列表就是这轮训练的类别顺序，换数据集时不必再靠 `sorted(os.listdir())` 猜。
+
 ## 数据集
 
 `ml_models.zip`（457 MB，见 [releases](https://github.com/summeriver13/cowface-detection/releases/tag/ml-models)）：
