@@ -27,6 +27,14 @@ PRETRAINED_MODEL_PATH = {
     size: ML_MODELS_DIR / "pretrained_models" / f"yolov8{size}.pt" for size in "nsmlx"
 }
 
+MODEL_TYPE_LABELS = {
+    "n": "YOLOv8n（nano）",
+    "s": "YOLOv8s（small）",
+    "m": "YOLOv8m（medium）",
+    "l": "YOLOv8l（large）",
+    "x": "YOLOv8x（xlarge）",
+}
+
 DATASET_PATH = ML_MODELS_DIR / "conference-paper-preparations"
 DATASET_CONFIG = {
     "path": DATASET_PATH,

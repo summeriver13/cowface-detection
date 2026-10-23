@@ -1,53 +1,50 @@
 {% extends "base.html" %}
 
+{% block title %}{{ cattle.name }} · 牛脸识别系统{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>牛只详情 - {{ cattle.name }}</h2>
-        <a href="{{ url_for('cattle.cattle') }}" class="btn btn-outline-secondary">返回列表</a>
+        <h1 class="h3 mb-0">牛只详情 · {{ cattle.name }}</h1>
+        <a class="btn btn-outline-secondary" href="{{ url_for('web.cattle.cattle_list') }}">返回列表</a>
     </div>
 
-    <!-- 牛只基本信息 -->
     <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title">基本信息</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>ID：</strong>{{ cattle.cattle_id }}</p>
-                    <p><strong>名称：</strong>{{ cattle.name }}</p>
-                </div>
-            </div>
+            <h2 class="h6 card-title mb-3">基本信息</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-2">ID</dt>
+                <dd class="col-sm-10">{{ cattle.cattle_id }}</dd>
+                <dt class="col-sm-2">名称</dt>
+                <dd class="col-sm-10 mb-0">{{ cattle.name }}</dd>
+            </dl>
         </div>
     </div>
 
-    <!-- 识别记录 -->
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">识别记录</h5>
+            <h2 class="h6 card-title mb-3">识别记录</h2>
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                <table class="table mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th>时间</th>
-                            <th>识别结果</th>
+                            <th scope="col">时间（UTC）</th>
+                            <th scope="col">结果</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for record in records %}
                         <tr>
-                            <td>{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="text-nowrap">{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>{{ record.result }}</td>
                         </tr>
+                        {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-4">暂无识别记录</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% if not records %}
-            <div class="text-center text-muted">
-                <p>暂无识别记录</p>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

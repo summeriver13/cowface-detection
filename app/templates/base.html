@@ -2,101 +2,79 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>牛脸识别系统</title>
-    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}牛脸识别系统{% endblock %}</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 自定义样式 -->
-    <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .main-content {
-            flex: 1;
-            padding: 20px 0;
-        }
-        .navbar {
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 1rem 0;
-            border-top: 1px solid #e9ecef;
-        }
-    </style>
-    {% block styles %}{% endblock %}
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
 </head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index.dashboard') }}">牛脸识别系统</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index.dashboard') }}">首页</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('cattle.cattle') }}">牛只管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('detect-routes.detect_page') }}">牛脸检测</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('train-routes.train') }}">模型训练</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('train-routes.training_status') }}">训练状态</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">退出登录</a>
-                    </li>
-                </ul>
-            </div>
+<body class="{% block body_class %}{% endblock %}">
+{% set logged_in = session.get('user_id') %}
+{% if logged_in %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('web.dashboard.dashboard') }}">牛脸识别系统</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+                aria-controls="main-nav" aria-expanded="false" aria-label="切换导航">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="main-nav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link{% if request.endpoint == 'web.dashboard.dashboard' %} active{% endif %}"
+                       href="{{ url_for('web.dashboard.dashboard') }}">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.blueprint == 'web.cattle' %} active{% endif %}"
+                       href="{{ url_for('web.cattle.cattle_list') }}">牛只管理</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.blueprint == 'web.detect' %} active{% endif %}"
+                       href="{{ url_for('web.detect.detect_page') }}">牛脸检测</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.endpoint == 'web.train.train_page' %} active{% endif %}"
+                       href="{{ url_for('web.train.train_page') }}">模型训练</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.endpoint == 'web.train.training_status_page' %} active{% endif %}"
+                       href="{{ url_for('web.train.training_status_page') }}">训练状态</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('web.auth.logout') }}">退出登录</a></li>
+            </ul>
         </div>
-    </nav>
-
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="container">
-                    {% for message in messages %}
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
     </div>
+</nav>
+{% endif %}
 
-    <!-- 页脚 -->
-    <footer class="footer">
-        <div class="container text-center">
-            <p class="text-muted mb-0">© 2024 牛脸识别系统 - 版权所有</p>
+<main class="app-main">
+    <div class="container" id="toast-area"></div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
         </div>
-    </footer>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
-    <!-- JavaScript 依赖 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    {% block content %}{% endblock %}
+</main>
+
+{% if logged_in %}
+<footer class="app-footer">
+    <div class="container text-center text-muted small">牛脸识别系统 · YOLOv8 检测 + EfficientNet 识别</div>
+</footer>
+{% endif %}
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+{% block scripts %}{% endblock %}
 </body>
-</html> 
+</html>

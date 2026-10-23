@@ -3,8 +3,10 @@ from pathlib import Path
 from flask import Flask
 
 from . import config
+from .api import api_bp, install_error_handlers
 from .extensions import db
-from .routes import auth_bp, cattle_bp, detect_bp, index_bp, train_bp
+from .routes import web_bp
+from .security import init_csrf
 
 
 def create_app() -> Flask:
@@ -16,11 +18,13 @@ def create_app() -> Flask:
 
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
+    init_csrf(app)
     with app.app_context():
         from . import models  # noqa: F401  建表前先注册 ORM 元数据
         db.create_all()
 
-    for blueprint in (auth_bp, index_bp, cattle_bp, detect_bp, train_bp):
-        app.register_blueprint(blueprint)
+    app.register_blueprint(web_bp)
+    app.register_blueprint(api_bp)
+    install_error_handlers(app)
 
     return app

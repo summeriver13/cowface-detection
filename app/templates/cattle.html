@@ -1,177 +1,79 @@
 {% extends "base.html" %}
 
+{% block title %}牛只管理 · 牛脸识别系统{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4">牛只管理</h2>
-    
-    <!-- 添加牛只表单 -->
-    <div class="card mb-5 shadow-sm">
+<div class="container mt-4" id="cattle-page"
+     data-create-url="{{ url_for('api.cattle.create_cattle') }}"
+     data-rename-base="{{ url_for('api.cattle.rename_cattle', cattle_id=0)[:-1] }}"
+     data-delete-base="{{ url_for('api.cattle.delete_cattle', cattle_id=0)[:-1] }}"
+     data-detail-base="{{ url_for('web.cattle.cattle_detail', cattle_id=0)[:-1] }}">
+    <h1 class="h3 mb-4">牛只管理</h1>
+
+    <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title mb-3">添加新牛只</h5>
-            <form id="addCattleForm" class="row g-3 align-items-center">
+            <h2 class="h6 card-title mb-3">添加牛只</h2>
+            <form id="add-cattle-form" class="row g-2 align-items-center">
                 <div class="col-md-8">
-                    <input type="text" class="form-control form-control-lg" id="cattleName" name="name" placeholder="输入牛只名称" required autofocus>
+                    <input class="form-control" type="text" name="name" maxlength="64" placeholder="牛只名称，与识别类别保持一致" required>
                 </div>
                 <div class="col-md-4 d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg">添加牛只</button>
+                    <button class="btn btn-primary" type="submit">添加</button>
                 </div>
             </form>
-            <div id="add-error" class="text-danger mt-2" style="display:none;"></div>
         </div>
     </div>
 
-    <!-- 牛只列表 -->
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body">
-            <h5 class="card-title mb-4">牛只列表</h5>
+            <h2 class="h6 card-title mb-3">牛只列表</h2>
+            <div class="alert alert-danger d-none" id="cattle-error" role="alert"></div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 6%">ID</th>
-                            <th scope="col" style="width: 35%">名称</th>
-                            <th scope="col" style="width: 35%">最近识别记录</th>
-                            <th scope="col" style="width: 24%">操作</th>
+                            <th scope="col" class="col-id">ID</th>
+                            <th scope="col">名称</th>
+                            <th scope="col">识别记录</th>
+                            <th scope="col" class="text-end">操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cow in cattle %}
-                        <tr>
+                        <tr data-cattle-id="{{ cow.cattle_id }}">
                             <td>{{ cow.cattle_id }}</td>
                             <td>
-                                <span class="cattle-name">{{ cow.name }}</span>
-                                <input type="text" class="form-control form-control-sm edit-name" style="display: none;" value="{{ cow.name }}">
+                                <span class="js-name">{{ cow.name }}</span>
+                                <input class="form-control form-control-sm js-name-input d-none" type="text"
+                                       maxlength="64" value="{{ cow.name }}" aria-label="牛只名称">
                             </td>
                             <td>
-                                {% if cow.recent_records %}
-                                <small class="text-secondary">最近 {{ cow.recent_records|length }} 条记录</small>
+                                {% if cow.record_count %}
+                                <span class="text-secondary">{{ cow.record_count }} 条</span>
                                 {% else %}
-                                <small class="text-muted fst-italic">暂无记录</small>
+                                <span class="text-muted fst-italic">暂无</span>
                                 {% endif %}
                             </td>
-                            <td>
-                                <div class="btn-group" role="group" aria-label="操作按钮组">
-                                    <button type="button" class="btn btn-sm btn-outline-primary view-btn" data-id="{{ cow.cattle_id }}">查看详情</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ cow.cattle_id }}">编辑</button>
-                                    <button type="button" class="btn btn-sm btn-outline-success save-btn" style="display: none;" data-id="{{ cow.cattle_id }}">保存</button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ cow.cattle_id }}">删除</button>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary js-open" type="button">详情</button>
+                                    <button class="btn btn-outline-secondary js-rename" type="button">改名</button>
+                                    <button class="btn btn-outline-success js-save d-none" type="button">保存</button>
+                                    <button class="btn btn-outline-danger js-delete" type="button">删除</button>
                                 </div>
                             </td>
                         </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">还没有牛只，先添加一头</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <div id="action-error" class="text-danger mt-3" style="display:none;"></div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-$(function() {
-    // 添加牛只
-    $('#addCattleForm').on('submit', function(e) {
-        e.preventDefault();
-        $('#add-error').hide();
-        const $btn = $(this).find('button[type="submit"]');
-        $btn.prop('disabled', true);
-
-        $.ajax({
-            url: '/cattle/add',
-            method: 'POST',
-            data: $(this).serialize(),
-            success(response) {
-                if (response.status === 'success') {
-                    location.reload();
-                } else {
-                    $('#add-error').text(response.message).show();
-                }
-            },
-            error() {
-                $('#add-error').text('请求失败，请稍后重试。').show();
-            },
-            complete() {
-                $btn.prop('disabled', false);
-            }
-        });
-    });
-
-    // 事件委托 - 编辑按钮
-    $(document).on('click', '.edit-btn', function() {
-        const $row = $(this).closest('tr');
-        $row.find('.cattle-name').hide();
-        const $input = $row.find('.edit-name');
-        $input.show().focus();
-        $(this).hide();
-        $row.find('.save-btn').show();
-        $('#action-error').hide();
-    });
-
-    // 事件委托 - 保存按钮
-    $(document).on('click', '.save-btn', function() {
-        const $row = $(this).closest('tr');
-        const id = $(this).data('id');
-        const name = $row.find('.edit-name').val().trim();
-
-        if (!name) {
-            $('#action-error').text('牛只名称不能为空。').show();
-            return;
-        }
-        $('#action-error').hide();
-
-        const $btn = $(this);
-        $btn.prop('disabled', true);
-
-        $.ajax({
-            url: `/cattle/edit/${id}`,
-            method: 'POST',
-            data: { name },
-            success(response) {
-                if (response.status === 'success') {
-                    location.reload();
-                } else {
-                    $('#action-error').text(response.message).show();
-                }
-            },
-            error() {
-                $('#action-error').text('请求失败，请稍后重试。').show();
-            },
-            complete() {
-                $btn.prop('disabled', false);
-            }
-        });
-    });
-
-    // 事件委托 - 删除按钮
-    $(document).on('click', '.delete-btn', function() {
-        if (!confirm('确定要删除这个牛只吗？相关的识别记录也会被删除。')) return;
-
-        const id = $(this).data('id');
-        $('#action-error').hide();
-
-        $.ajax({
-            url: `/cattle/delete/${id}`,
-            method: 'POST',
-            success(response) {
-                if (response.status === 'success') {
-                    location.reload();
-                } else {
-                    $('#action-error').text(response.message).show();
-                }
-            },
-            error() {
-                $('#action-error').text('请求失败，请稍后重试。').show();
-            }
-        });
-    });
-
-    // 事件委托 - 查看详情
-    $(document).on('click', '.view-btn', function() {
-        const id = $(this).data('id');
-        window.location.href = `/cattle/detail/${id}`;
-    });
-});
-</script>
+<script src="{{ url_for('static', filename='js/cattle.js') }}"></script>
 {% endblock %}

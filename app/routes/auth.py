@@ -1,52 +1,48 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
-from ..models import User# 根据实际项目调整导入
+from ..models import User
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint("auth", __name__)
 
-# 添加登录路由
-@auth_bp.route('/login', methods=['GET', 'POST'])
+
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    if request.method == "POST":
+        user = User.query.filter_by(username=request.form.get("username")).first()
+        if user and check_password_hash(user.password, request.form.get("password") or ""):
+            session["user_id"] = user.user_id
+            flash("登录成功", "success")
+            return redirect(url_for("web.dashboard.dashboard"))
 
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.user_id
-            flash('登录成功')
-            return redirect(url_for('index.dashboard')) 
+        flash("用户名或密码错误", "danger")
+    return render_template("login.html")
 
-        flash('用户名或密码错误')
-    return render_template('login.html')
 
-# 添加注册路由
-@auth_bp.route('/register', methods=['GET', 'POST'])
+@auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        password = request.form.get("password") or ""
 
+        if not username or not password:
+            flash("用户名和密码都不能为空", "danger")
+            return redirect(url_for("web.auth.register"))
         if User.query.filter_by(username=username).first():
-            flash('用户名已存在')
-            return redirect(url_for('auth.register'))
+            flash("用户名已存在", "danger")
+            return redirect(url_for("web.auth.register"))
 
-        user = User(
-            username=username,
-            password=generate_password_hash(password)
-        )
-        db.session.add(user)
+        db.session.add(User(username=username, password=generate_password_hash(password)))
         db.session.commit()
-        flash('注册成功')
-        return redirect(url_for('auth.login'))
+        flash("注册成功，请登录", "success")
+        return redirect(url_for("web.auth.login"))
 
-    return render_template('register.html')
+    return render_template("register.html")
 
-# 添加登出路由
-@auth_bp.route('/logout')
+
+@auth_bp.route("/logout")
 def logout():
-    session.pop('user_id', None)
-    flash('已退出登录')
-    return redirect(url_for('auth.login'))
+    session.pop("user_id", None)
+    flash("已退出登录", "info")
+    return redirect(url_for("web.auth.login"))

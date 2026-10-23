@@ -1,0 +1,93 @@
+:root {
+    --brand: #2f6f4e;
+    --brand-soft: #eef5f0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f7f8f7;
+}
+
+.app-main {
+    flex: 1;
+    padding-bottom: 2rem;
+}
+
+.app-footer {
+    padding: 1rem 0;
+    border-top: 1px solid #e7e9e7;
+    background-color: #fff;
+}
+
+.navbar-brand {
+    letter-spacing: 0.02em;
+}
+
+.nav-link.active {
+    color: var(--brand) !important;
+    font-weight: 600;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--brand);
+    --bs-btn-border-color: var(--brand);
+    --bs-btn-hover-bg: #285f43;
+    --bs-btn-hover-border-color: #285f43;
+    --bs-btn-active-bg: #225237;
+    --bs-btn-active-border-color: #225237;
+}
+
+.card {
+    border: 1px solid #e7e9e7;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.stat-card .display-6 {
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.auth-page {
+    background-image: url("../background.jpg");
+    background-size: cover;
+    background-position: center;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 380px;
+    margin: 8vh auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.detect-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 460px;
+    border-radius: 8px;
+}
+
+.status-badge {
+    text-transform: capitalize;
+}
+
+.status-training {
+    background-color: #1e90ff;
+}
+
+.status-completed {
+    background-color: #28a745;
+}
+
+.status-failed {
+    background-color: #dc3545;
+}
+
+.col-id {
+    width: 6rem;
+}

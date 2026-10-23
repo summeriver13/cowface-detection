@@ -1,110 +1,58 @@
 {% extends "base.html" %}
 
+{% block title %}训练状态 · 牛脸识别系统{% endblock %}
+
 {% block content %}
-<div class="container training-status-container">
-    <h1>训练状态</h1>
-    <table class="training-table">
-        <thead>
-            <tr>
-                <th>模型类型</th>
-                <th>开始时间</th>
-                <th>状态</th>
-                <th>mAP@0.5</th>
-                <th>mAP@0.5:0.95</th>
-                <th>Precision</th>
-                <th>Recall</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for training in trainings %}
-            <tr>
-                <td>YOLOv8{{ training.model_type }}</td>
-                <td>{{ training.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td class="status-{{ training.status }}">{{ training.status|capitalize }}</td>
-                <td>{{ "%.3f"|format(training.map50) if training.map50 else "-" }}</td>
-                <td>{{ "%.3f"|format(training.map50_95) if training.map50_95 else "-" }}</td>
-                <td>{{ "%.3f"|format(training.precision) if training.precision else "-" }}</td>
-                <td>{{ "%.3f"|format(training.recall) if training.recall else "-" }}</td>
-                <td>
-                    <form method="post" action="{{ url_for('train-routes.delete_training', training_id=training.training_id) }}" onsubmit="return confirm('确认删除该训练记录？');" style="display:inline;">
-                        <button type="submit" class="btn-delete">中止</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8" style="text-align:center;">暂无训练记录</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-4" id="training-status-page"
+     data-list-url="{{ url_for('api.train.list_trainings') }}"
+     data-delete-base="{{ url_for('api.train.delete_training', training_id=0)[:-1] }}">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">训练状态</h1>
+        <a class="btn btn-outline-primary" href="{{ url_for('web.train.train_page') }}">新建训练</a>
+    </div>
+
+    <div class="alert alert-danger d-none" id="status-error" role="alert"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">模型</th>
+                            <th scope="col">开始时间（UTC）</th>
+                            <th scope="col">状态</th>
+                            <th scope="col">mAP@0.5</th>
+                            <th scope="col">mAP@0.5:0.95</th>
+                            <th scope="col">P</th>
+                            <th scope="col">R</th>
+                            <th scope="col" class="text-end">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="training-rows">
+                        {% for training in trainings %}
+                        <tr data-training-id="{{ training.training_id }}">
+                            <td>{{ model_types.get(training.model_type, training.model_type) }}</td>
+                            <td class="text-nowrap">{{ training.start_time.strftime('%Y-%m-%d %H:%M:%S') if training.start_time else '-' }}</td>
+                            <td><span class="badge status-badge status-{{ training.status }}">{{ training.status }}</span></td>
+                            <td>{{ '%.3f'|format(training.map50) if training.map50 is not none else '-' }}</td>
+                            <td>{{ '%.3f'|format(training.map50_95) if training.map50_95 is not none else '-' }}</td>
+                            <td>{{ '%.3f'|format(training.precision) if training.precision is not none else '-' }}</td>
+                            <td>{{ '%.3f'|format(training.recall) if training.recall is not none else '-' }}</td>
+                            <td class="text-end"><button class="btn btn-sm btn-outline-danger js-delete" type="button">删除</button></td>
+                        </tr>
+                        {% else %}
+                        <tr id="training-empty"><td colspan="8" class="text-center text-muted py-4">暂无训练记录</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
 
-<style>
-.training-status-container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px;
-    background: rgba(255,255,255,0.95);
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.training-status-container h1 {
-    text-align: center;
-    margin-bottom: 24px;
-    color: #222;
-}
-
-.training-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.training-table th, .training-table td {
-    border: 1px solid #ccc;
-    padding: 10px 12px;
-    text-align: left;
-    font-size: 14px;
-}
-
-.training-table th {
-    background-color: #f0f0f0;
-    font-weight: 600;
-}
-
-.training-table tbody tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-.status-training {
-    color: #1E90FF;
-    font-weight: 600;
-}
-
-.status-completed {
-    color: #28a745;
-    font-weight: 600;
-}
-
-.status-failed {
-    color: #dc3545;
-    font-weight: 600;
-}
-
-.btn-delete {
-    background-color: #dc3545;
-    border: none;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: background-color 0.3s ease;
-}
-
-.btn-delete:hover {
-    background-color: #b52a37;
-}
-</style>
+{% block scripts %}
+<script>window.MODEL_TYPE_LABELS = {{ model_types|tojson }};</script>
+<script src="{{ url_for('static', filename='js/training_status.js') }}"></script>
 {% endblock %}
