@@ -1,11 +1,11 @@
-# CowFaceDetection
+# herdface
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
   <img alt="Flask" src="https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white">
   <img alt="YOLOv8" src="https://img.shields.io/badge/detection-YOLOv8-FF6F00">
   <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white">
-  <img alt="CI" src="https://github.com/summeriver13/cowface-detection/actions/workflows/ci.yml/badge.svg">
+  <img alt="CI" src="https://github.com/summeriver13/herdface/actions/workflows/ci.yml/badge.svg">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -53,7 +53,7 @@
 
 ### 1. 准备模型
 
-在 [releases](https://github.com/summeriver13/cowface-detection/releases/tag/ml-models) 下载 `ml_models.zip`（457 MB），解压后把 `ml_models/` 放到项目根目录。
+在 [releases](https://github.com/summeriver13/herdface/releases/tag/ml-models) 下载 `ml_models.zip`（457 MB），解压后把 `ml_models/` 放到项目根目录。
 
 ### 2. 装依赖
 
