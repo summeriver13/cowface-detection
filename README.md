@@ -6,21 +6,27 @@
 
 ## 结果
 
-`python scripts/evaluate.py` 在项目自带划分上的输出（CPU，仓库里发布的微调权重）：
+同一个权重，在两个划分上的表现：
 
-| 任务 | 指标 | 值 |
-| --- | --- | --- |
-| 牛脸检测 | mAP50 | 0.941 |
-| 牛脸检测 | mAP50-95 | 0.520 |
-| 牛脸检测 | precision / recall | 0.936 / 0.934 |
-| 牛脸检测 | CPU 单张推理 | 26 ms |
-| 个体识别 | top-1（10 头牛，110 张） | 100% |
+| 评测 | 数据 | mAP50 | mAP50-95 | P | R |
+| --- | --- | --- | --- | --- | --- |
+| 项目自带 test | 107 张，与 train 同源 | 0.941 | 0.520 | 0.936 | 0.934 |
+| 跨数据集零样本 | OpenCows2020 真实帧 3,707 张 / 6,914 个框 | 0.055 | 0.013 | 0.166 | 0.103 |
 
-这三个数字**不能当泛化能力看**，数据集划分有两个问题：
+个体识别在项目自带的 10 头牛、110 张 test 上 top-1 100%，CPU 单张检测 26 ms。
 
-- 检测的 test 只有 40 段视频帧，其中 39 段同时出现在 train —— Roboflow 是按增强图随机划分的，不是按帧划分，同一条视频的两帧会分别在 train 和 test 里。
+两个数字差 17 倍，原因不只是域偏移（不同牧场、相机、品种），更主要的是自带划分本身有泄漏：
+
+- 检测的 test 只有 40 段视频帧，其中 39 段同时出现在 train —— Roboflow 按增强图随机划分，不是按帧划分，同一条视频的两帧会分处 train 与 test。
 - 分类的 test 与 train 是同一批牛、同一场景的照片；dHash 抽查显示 14% 的 test 图与 train 某张的 Hamming 距离 ≤ 4。
 - 有 2 头牛（`Cow (4)`、`Cow (8)`）没进训练集，模型仍然把它们判成已知个体：平均最大概率 0.90 与 0.57，没有 unknown 拒识。
+
+复现：
+
+```bash
+python scripts/evaluate.py                        # 自带划分：检测 + 分类 + open-set
+python scripts/evaluate_opencows.py --zip OpenCows2020.zip --workdir opencows_eval   # 跨数据集
+```
 
 ## 数据集
 
@@ -33,7 +39,23 @@
 | `dataset_for_classification/` | 分类数据集，按牛分目录：train 420 / test 110 张，10 头牛 |
 | `pretrained_models/` | YOLOv8n、YOLOv8s 预训练权重 |
 
-每个节点的视频帧数决定了真实样本量：train 56 帧、valid 48 帧、test 40 帧，其余都是增强副本。
+真实样本量由视频帧数决定：train 56 帧、valid 48 帧、test 40 帧，其余都是增强副本。
+
+### 外部数据集
+
+自带数据只有 12 头牛、56 段训练帧，想验证泛化或者换个场景训练，用这两个公开数据集：
+
+| 数据集 | 规模 | 内容 | 许可 |
+| --- | --- | --- | --- |
+| [OpenCows2020](https://data.bris.ac.uk/data/dataset/10m32xl88x2b61zlkkgz3fml17) | 2.1 GiB | 7,043 张检测帧（darknet + VOC 标签，003707 之后为合成图）、46 头牛的识别图 | Non-Commercial Government Licence |
+| [Cows2021](https://data.bris.ac.uk/data/dataset/4vnrca7qw1642qlwxjadp87h7) | 17.6 GiB | 检测（COCO json）、识别（182 头牛、21k 图）、官方权重 | Non-Commercial Government Licence |
+
+两个都来自布里斯托大学同一个课题组，检测标签的类别都是"牛脸"，与这里的单类检测直接对齐；识别部分是分牛目录，可以直接换成 `dataset_for_classification` 的格式。非商业许可意味着可以用于研究和演示，不能商用。
+
+```bash
+curl -L -o OpenCows2020.zip https://data.bris.ac.uk/datasets/tar/10m32xl88x2b61zlkkgz3fml17.zip
+curl -L -o Cows2021.zip    https://data.bris.ac.uk/datasets/tar/4vnrca7qw1642qlwxjadp87h7.zip
+```
 
 ## 快速开始
 
@@ -77,15 +99,16 @@ FLASK_DEBUG=1 python run.py    # 带调试与自动重载
 ## 目录结构
 
 ```
-run.py                入口
-scripts/evaluate.py   检测与识别的复现脚本
-app/__init__.py       create_app：配置、蓝图注册、建表
-app/config.py         路径与环境变量
-app/models/           ORM：User / Cattle / RecognitionRecord / ModelTraining
-app/controllers/      业务逻辑：识别器、数据集 yaml、训练
-app/routes/           蓝图：auth / index / cattle / detect / train
-app/templates/        Jinja2 页面
-docs/preview.png      README 里的检测样例
+run.py                        入口
+scripts/evaluate.py           自带划分上的检测 / 识别 / open-set 评测
+scripts/evaluate_opencows.py  跨数据集评测（OpenCows2020）
+app/__init__.py               create_app：配置、蓝图注册、建表
+app/config.py                 路径与环境变量
+app/models/                   ORM：User / Cattle / RecognitionRecord / ModelTraining
+app/controllers/              业务逻辑：识别器、数据集 yaml、训练
+app/routes/                   蓝图：auth / index / cattle / detect / train
+app/templates/                Jinja2 页面
+docs/preview.png              README 里的检测样例
 ```
 
 ## 已知限制
